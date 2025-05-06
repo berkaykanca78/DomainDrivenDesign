@@ -1,4 +1,4 @@
-namespace DomainDrivenDesign.WebApi
+namespace DomainDrivenDesign.WebApi.Models
 {
     public class WeatherForecast
     {

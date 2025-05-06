@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using DomainDrivenDesign.WebApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DomainDrivenDesign.WebApi.Controllers
@@ -20,8 +21,8 @@ namespace DomainDrivenDesign.WebApi.Controllers
             _logger = logger;
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        [HttpGet(nameof(GetWeatherForecast))]
+        public IEnumerable<WeatherForecast> GetWeatherForecast()
         {
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {

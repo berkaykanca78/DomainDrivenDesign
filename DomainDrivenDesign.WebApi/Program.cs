@@ -1,24 +1,51 @@
+using DomainDrivenDesign.WebApi.Models;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#region Config
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+#endregion
+
+#region Controller, CORS, Swagger
 builder.Services.AddControllers();
 builder.Services.AddCors();
-
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.Authority = "https://www.berkaykanca.com"; 
-        options.Audience = "DomainDrivenDesign";
-    });
-
 builder.Services.AddOpenApi("v1", options =>
 {
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
 });
+#endregion
+
+#region Authentication and JwtSettings
+builder.Services.AddSingleton<JwtSettings>(resolver =>
+{
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+    return jwtSettings;
+});
+
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        var jwtSettings = builder.Services.BuildServiceProvider().GetRequiredService<JwtSettings>();
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)) 
+        };
+    });
+#endregion
 
 var app = builder.Build();
 
+#region Middleware Pipelines
 app.Use(async (context, next) =>
 {
     if (context.Request.Path == "/")
@@ -30,7 +57,6 @@ app.Use(async (context, next) =>
 });
 
 app.UseHttpsRedirection();
-
 app.UseCors(x => x
     .AllowAnyMethod()
     .AllowAnyHeader()
@@ -48,5 +74,5 @@ app.MapScalarApiReference(opt =>
 });
 
 app.MapControllers();
-
 app.Run();
+#endregion
