@@ -1,19 +1,11 @@
-ï»¿using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace DomainDrivenDesign.WebApi.Helpers;
-public class EncryptionHelper
-{
-    /* Example:
-      var key = EncryptionHelper.GenerateKey();
-      string original = "merhaba dÃ¼nya";
-      string encrypted = EncryptionHelper.Encrypt(original, key);
-      string decrypted = EncryptionHelper.Decrypt(encrypted, key);
-    */
+namespace DomainDrivenDesign.Infrastructure.Helpers;
 
-    private static readonly string _key = "b14ca5898a4e4133bbce2ea2315a1916"; 
+public static class EncryptionHelper
+{
+    private static readonly string _key = "b14ca5898a4e4133bbce2ea2315a1916";
 
     public static string GenerateKey()
     {
@@ -74,7 +66,7 @@ public class EncryptionHelper
                 aes.IV = iv;
                 aes.Padding = PaddingMode.PKCS7;
                 aes.Mode = CipherMode.CBC;
-                
+
                 ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
 
                 using (MemoryStream memoryStream = new MemoryStream(buffer))
@@ -91,12 +83,12 @@ public class EncryptionHelper
         }
         catch (CryptographicException ex)
         {
-            // Daha aÃ§Ä±klayÄ±cÄ± hata mesajÄ±
-            throw new CryptographicException($"Åžifre Ã§Ã¶zme iÅŸleminde hata: {ex.Message} - ÅžifrelenmiÅŸ metin: {cipherText}", ex);
+            // Daha açýklayýcý hata mesajý
+            throw new CryptographicException($"Þifre çözme iþleminde hata: {ex.Message} - Þifrelenmiþ metin: {cipherText}", ex);
         }
         catch (Exception ex)
         {
             throw new Exception($"Beklenmeyen hata: {ex.Message}", ex);
         }
     }
-}
+} 

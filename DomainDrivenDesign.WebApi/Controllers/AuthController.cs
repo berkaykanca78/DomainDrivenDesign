@@ -1,5 +1,6 @@
-﻿using DomainDrivenDesign.WebApi.Helpers;
-using DomainDrivenDesign.WebApi.Models;
+﻿using DomainDrivenDesign.Application.Models;
+using DomainDrivenDesign.Infrastructure.Helpers;
+using DomainDrivenDesign.Infrastructure.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

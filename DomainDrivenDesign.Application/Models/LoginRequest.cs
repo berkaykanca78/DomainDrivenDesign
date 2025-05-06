@@ -1,7 +1,7 @@
-﻿namespace DomainDrivenDesign.WebApi.Models;
+namespace DomainDrivenDesign.Application.Models;
 
-public class LoginSettings
+public class LoginRequest
 {
     public string Username { get; set; }
     public string Password { get; set; }
-}
+} 

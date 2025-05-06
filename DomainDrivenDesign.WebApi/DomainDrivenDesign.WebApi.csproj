@@ -17,4 +17,10 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.9.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\DomainDrivenDesign.Application\DomainDrivenDesign.Application.csproj" />
+    <ProjectReference Include="..\DomainDrivenDesign.Domain\DomainDrivenDesign.Domain.csproj" />
+    <ProjectReference Include="..\DomainDrivenDesign.Infrastructure\DomainDrivenDesign.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

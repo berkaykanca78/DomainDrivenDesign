@@ -1,5 +1,5 @@
-using DomainDrivenDesign.WebApi.Models;
-using DomainDrivenDesign.WebApi.Helpers;
+using DomainDrivenDesign.Infrastructure.Helpers;
+using DomainDrivenDesign.Infrastructure.Settings;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
