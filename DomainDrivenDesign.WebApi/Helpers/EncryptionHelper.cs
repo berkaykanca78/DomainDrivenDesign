@@ -1,44 +1,76 @@
-﻿using System.Text;
-using Sodium;
+﻿using System.Security.Cryptography;
+using System.Text;
 
 namespace DomainDrivenDesign.WebApi.Helpers;
 public class EncryptionHelper
 {
     /* Example:
-      var key1 = EncryptionHelper.GenerateKey();
+      var key = EncryptionHelper.GenerateKey();
       string original = "merhaba dünya";
-      string encrypted = EncryptionHelper.Encrypt(original, key1);
-      string decrypted = EncryptionHelper.Decrypt(encrypted, key1);
+      string encrypted = EncryptionHelper.Encrypt(original, key);
+      string decrypted = EncryptionHelper.Decrypt(encrypted, key);
     */
 
-    public static byte[] GenerateKey()
+    public static string GenerateKey()
     {
-        return SecretBox.GenerateKey();
+        using (var aes = Aes.Create())
+        {
+            aes.GenerateKey();
+            return Convert.ToBase64String(aes.Key);
+        }
     }
 
-    public static string Encrypt(string plaintext, byte[] key)
+    public static string Encrypt(string plainText, string keyBase64)
     {
-        byte[] nonce = SecretBox.GenerateNonce(); // 24-byte nonce
-        byte[] messageBytes = Encoding.UTF8.GetBytes(plaintext);
-        byte[] cipher = SecretBox.Create(messageBytes, nonce, key);
-
-        byte[] combined = new byte[nonce.Length + cipher.Length];
-        Buffer.BlockCopy(nonce, 0, combined, 0, nonce.Length);
-        Buffer.BlockCopy(cipher, 0, combined, nonce.Length, cipher.Length);
-
-        return Convert.ToBase64String(combined);
+        byte[] key = Convert.FromBase64String(keyBase64);
+        
+        using (var aes = Aes.Create())
+        {
+            aes.Key = key;
+            aes.GenerateIV(); // Her şifreleme için yeni bir IV oluştur
+            
+            using (var encryptor = aes.CreateEncryptor())
+            using (var memoryStream = new MemoryStream())
+            {
+                // IV'yi şifreli metne ekle
+                memoryStream.Write(aes.IV, 0, aes.IV.Length);
+                
+                using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+                using (var streamWriter = new StreamWriter(cryptoStream))
+                {
+                    streamWriter.Write(plainText);
+                }
+                
+                return Convert.ToBase64String(memoryStream.ToArray());
+            }
+        }
     }
 
-    public static string Decrypt(string encryptedBase64, byte[] key)
+    public static string Decrypt(string cipherTextBase64, string keyBase64)
     {
-        byte[] combined = Convert.FromBase64String(encryptedBase64);
-        byte[] nonce = new byte[24];
-        byte[] cipher = new byte[combined.Length - nonce.Length];
-
-        Buffer.BlockCopy(combined, 0, nonce, 0, nonce.Length);
-        Buffer.BlockCopy(combined, nonce.Length, cipher, 0, cipher.Length);
-
-        byte[] decrypted = SecretBox.Open(cipher, nonce, key);
-        return Encoding.UTF8.GetString(decrypted);
+        byte[] cipherBytes = Convert.FromBase64String(cipherTextBase64);
+        byte[] key = Convert.FromBase64String(keyBase64);
+        
+        using (var aes = Aes.Create())
+        {
+            aes.Key = key;
+            
+            // IV'yi şifreli metinden al (AES için ilk 16 byte)
+            byte[] iv = new byte[aes.BlockSize / 8];
+            Array.Copy(cipherBytes, 0, iv, 0, iv.Length);
+            aes.IV = iv;
+            
+            using (var decryptor = aes.CreateDecryptor())
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Write))
+                {
+                    // IV sonrası verileri şifresi çöz
+                    cryptoStream.Write(cipherBytes, iv.Length, cipherBytes.Length - iv.Length);
+                }
+                
+                return Encoding.UTF8.GetString(memoryStream.ToArray());
+            }
+        }
     }
 }

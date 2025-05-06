@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 #region Config
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<LoginSettings>(builder.Configuration.GetSection("LoginSettings"));
 #endregion
 
 #region Controller, CORS, Swagger
