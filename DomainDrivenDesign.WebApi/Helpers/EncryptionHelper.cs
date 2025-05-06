@@ -13,7 +13,7 @@ public class EncryptionHelper
       string decrypted = EncryptionHelper.Decrypt(encrypted, key);
     */
 
-    private static readonly string _key = "b14ca5898a4e4133bbce2ea2315a1916"; // 32 karakter (256 bit)
+    private static readonly string _key = "b14ca5898a4e4133bbce2ea2315a1916"; 
 
     public static string GenerateKey()
     {

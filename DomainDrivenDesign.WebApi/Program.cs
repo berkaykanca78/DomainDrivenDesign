@@ -1,4 +1,5 @@
 using DomainDrivenDesign.WebApi.Models;
+using DomainDrivenDesign.WebApi.Helpers;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
@@ -22,7 +23,15 @@ builder.Services.AddOpenApi("v1", options =>
 #region Authentication and JwtSettings
 builder.Services.AddSingleton<JwtSettings>(resolver =>
 {
-    var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+    var encryptedJwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+    
+    var jwtSettings = new JwtSettings
+    {
+        Issuer = EncryptionHelper.Decrypt(encryptedJwtSettings.Issuer),
+        Audience = EncryptionHelper.Decrypt(encryptedJwtSettings.Audience),
+        SecretKey = EncryptionHelper.Decrypt(encryptedJwtSettings.SecretKey)
+    };
+    
     return jwtSettings;
 });
 

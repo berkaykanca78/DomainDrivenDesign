@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace DomainDrivenDesign.WebApi.Controllers
@@ -16,9 +15,6 @@ namespace DomainDrivenDesign.WebApi.Controllers
     {
         private readonly JwtSettings _jwtSettings;
         private readonly LoginSettings _loginSettings;
-        private readonly string _decryptedUsername;
-        private readonly string _decryptedPassword;
-
         public AuthController(IOptions<JwtSettings> jwtOptions, IOptions<LoginSettings> loginOptions)
         {
             _jwtSettings = jwtOptions.Value;
@@ -26,30 +22,25 @@ namespace DomainDrivenDesign.WebApi.Controllers
 
             try
             {
-                _decryptedUsername = EncryptionHelper.Decrypt(_loginSettings.Username);
-                _decryptedPassword = EncryptionHelper.Decrypt(_loginSettings.Password);
+                _loginSettings.Username = EncryptionHelper.Decrypt(_loginSettings.Username);
+                _loginSettings.Password = EncryptionHelper.Decrypt(_loginSettings.Password);
             }
-            catch (CryptographicException ex)
+            catch (Exception)
             {
-                _decryptedUsername = string.Empty;
-                _decryptedPassword = string.Empty;
-            }
-            catch (Exception ex)
-            {
-                _decryptedUsername = string.Empty;
-                _decryptedPassword = string.Empty;
+                _loginSettings.Username = string.Empty;
+                _loginSettings.Password = string.Empty;
             }
         }
 
         [HttpPost(nameof(Login))]
         public IActionResult Login([FromBody] LoginRequest request)
         {
-            if (string.IsNullOrEmpty(_decryptedUsername) || string.IsNullOrEmpty(_decryptedPassword))
+            if (string.IsNullOrEmpty(_loginSettings.Username) || string.IsNullOrEmpty(_loginSettings.Password))
             {
                 return StatusCode(500, "Sistem yapılandırma hatası. Lütfen yönetici ile iletişime geçin.");
             }
 
-            if (request.Username != _decryptedUsername || request.Password != _decryptedPassword)
+            if (request.Username != _loginSettings.Username || request.Password != _loginSettings.Password)
                 return Unauthorized("Kullanıcı adı veya şifre hatalı");
 
             var claims = new[]
