@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace DomainDrivenDesign.WebApi.Helpers;
@@ -11,6 +13,8 @@ public class EncryptionHelper
       string decrypted = EncryptionHelper.Decrypt(encrypted, key);
     */
 
+    private static readonly string _key = "b14ca5898a4e4133bbce2ea2315a1916"; // 32 karakter (256 bit)
+
     public static string GenerateKey()
     {
         using (var aes = Aes.Create())
@@ -20,57 +24,79 @@ public class EncryptionHelper
         }
     }
 
-    public static string Encrypt(string plainText, string keyBase64)
+    public static string Encrypt(string plainText)
     {
-        byte[] key = Convert.FromBase64String(keyBase64);
-        
-        using (var aes = Aes.Create())
+        if (string.IsNullOrEmpty(plainText))
+            return plainText;
+
+        byte[] iv = new byte[16];
+        byte[] array;
+
+        using (Aes aes = Aes.Create())
         {
-            aes.Key = key;
-            aes.GenerateIV(); // Her şifreleme için yeni bir IV oluştur
-            
-            using (var encryptor = aes.CreateEncryptor())
-            using (var memoryStream = new MemoryStream())
+            aes.Key = Encoding.UTF8.GetBytes(_key);
+            aes.IV = iv;
+            aes.Padding = PaddingMode.PKCS7;
+            aes.Mode = CipherMode.CBC;
+
+            ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+
+            using (MemoryStream memoryStream = new MemoryStream())
             {
-                // IV'yi şifreli metne ekle
-                memoryStream.Write(aes.IV, 0, aes.IV.Length);
-                
-                using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
-                using (var streamWriter = new StreamWriter(cryptoStream))
+                using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
                 {
-                    streamWriter.Write(plainText);
+                    using (StreamWriter streamWriter = new StreamWriter(cryptoStream))
+                    {
+                        streamWriter.Write(plainText);
+                    }
+
+                    array = memoryStream.ToArray();
                 }
-                
-                return Convert.ToBase64String(memoryStream.ToArray());
             }
         }
+
+        return Convert.ToBase64String(array);
     }
 
-    public static string Decrypt(string cipherTextBase64, string keyBase64)
+    public static string Decrypt(string cipherText)
     {
-        byte[] cipherBytes = Convert.FromBase64String(cipherTextBase64);
-        byte[] key = Convert.FromBase64String(keyBase64);
-        
-        using (var aes = Aes.Create())
+        if (string.IsNullOrEmpty(cipherText))
+            return cipherText;
+
+        try
         {
-            aes.Key = key;
-            
-            // IV'yi şifreli metinden al (AES için ilk 16 byte)
-            byte[] iv = new byte[aes.BlockSize / 8];
-            Array.Copy(cipherBytes, 0, iv, 0, iv.Length);
-            aes.IV = iv;
-            
-            using (var decryptor = aes.CreateDecryptor())
-            using (var memoryStream = new MemoryStream())
+            byte[] iv = new byte[16];
+            byte[] buffer = Convert.FromBase64String(cipherText);
+
+            using (Aes aes = Aes.Create())
             {
-                using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Write))
-                {
-                    // IV sonrası verileri şifresi çöz
-                    cryptoStream.Write(cipherBytes, iv.Length, cipherBytes.Length - iv.Length);
-                }
+                aes.Key = Encoding.UTF8.GetBytes(_key);
+                aes.IV = iv;
+                aes.Padding = PaddingMode.PKCS7;
+                aes.Mode = CipherMode.CBC;
                 
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
+                ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+
+                using (MemoryStream memoryStream = new MemoryStream(buffer))
+                {
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader streamReader = new StreamReader(cryptoStream))
+                        {
+                            return streamReader.ReadToEnd();
+                        }
+                    }
+                }
             }
+        }
+        catch (CryptographicException ex)
+        {
+            // Daha açıklayıcı hata mesajı
+            throw new CryptographicException($"Şifre çözme işleminde hata: {ex.Message} - Şifrelenmiş metin: {cipherText}", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Beklenmeyen hata: {ex.Message}", ex);
         }
     }
 }

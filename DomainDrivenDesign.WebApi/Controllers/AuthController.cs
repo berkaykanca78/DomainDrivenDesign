@@ -1,9 +1,11 @@
-﻿using DomainDrivenDesign.WebApi.Models;
+﻿using DomainDrivenDesign.WebApi.Helpers;
+using DomainDrivenDesign.WebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace DomainDrivenDesign.WebApi.Controllers
@@ -14,17 +16,40 @@ namespace DomainDrivenDesign.WebApi.Controllers
     {
         private readonly JwtSettings _jwtSettings;
         private readonly LoginSettings _loginSettings;
+        private readonly string _decryptedUsername;
+        private readonly string _decryptedPassword;
 
         public AuthController(IOptions<JwtSettings> jwtOptions, IOptions<LoginSettings> loginOptions)
         {
             _jwtSettings = jwtOptions.Value;
             _loginSettings = loginOptions.Value;
+
+            try
+            {
+                _decryptedUsername = EncryptionHelper.Decrypt(_loginSettings.Username);
+                _decryptedPassword = EncryptionHelper.Decrypt(_loginSettings.Password);
+            }
+            catch (CryptographicException ex)
+            {
+                _decryptedUsername = string.Empty;
+                _decryptedPassword = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _decryptedUsername = string.Empty;
+                _decryptedPassword = string.Empty;
+            }
         }
 
         [HttpPost(nameof(Login))]
         public IActionResult Login([FromBody] LoginRequest request)
         {
-            if (request.Username != _loginSettings.Username || request.Password != _loginSettings.Password)
+            if (string.IsNullOrEmpty(_decryptedUsername) || string.IsNullOrEmpty(_decryptedPassword))
+            {
+                return StatusCode(500, "Sistem yapılandırma hatası. Lütfen yönetici ile iletişime geçin.");
+            }
+
+            if (request.Username != _decryptedUsername || request.Password != _decryptedPassword)
                 return Unauthorized("Kullanıcı adı veya şifre hatalı");
 
             var claims = new[]
