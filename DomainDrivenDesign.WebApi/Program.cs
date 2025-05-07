@@ -4,7 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
 using AspNetCoreRateLimit;
-using Microsoft.AspNetCore.Http;
 using DomainDrivenDesign.WebApi.Extensions;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -14,10 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<LoginSettings>(builder.Configuration.GetSection("LoginSettings"));
 
-// Memory Cache servisini ekle
 builder.Services.AddMemoryCache();
 
-// Rate limiting yapılandırması
 builder.Services.Configure<IpRateLimitOptions>(options =>
 {
     options.EnableEndpointRateLimiting = true;
@@ -98,8 +95,8 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseGlobalExceptionMiddleware(); // Önce global exception handling
-app.UseIpRateLimiting(); // Sonra rate limiting
+app.UseGlobalExceptionMiddleware(); 
+app.UseIpRateLimiting(); 
 
 app.UseHttpsRedirection();
 app.UseCors(x => x
