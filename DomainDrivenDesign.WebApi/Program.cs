@@ -1,11 +1,11 @@
+using AspNetCoreRateLimit;
 using DomainDrivenDesign.Infrastructure.Helpers;
 using DomainDrivenDesign.Infrastructure.Settings;
+using DomainDrivenDesign.WebApi.Extensions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
-using AspNetCoreRateLimit;
-using DomainDrivenDesign.WebApi.Extensions;
-using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
