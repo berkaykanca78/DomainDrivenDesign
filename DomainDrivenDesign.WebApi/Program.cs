@@ -1,7 +1,7 @@
 using AspNetCoreRateLimit;
 using DomainDrivenDesign.Infrastructure.Helpers;
 using DomainDrivenDesign.Infrastructure.Settings;
-using DomainDrivenDesign.WebApi.Extensions;
+using DomainDrivenDesign.WebApi.Middlewares;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -95,7 +95,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseGlobalExceptionMiddleware(); 
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseIpRateLimiting(); 
 
 app.UseHttpsRedirection();
