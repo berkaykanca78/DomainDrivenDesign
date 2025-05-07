@@ -6,8 +6,26 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
+using Serilog;
+using Serilog.Sinks.Graylog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.Graylog(new GraylogSinkOptions
+    {
+        HostnameOrAddress = "localhost",
+        Port = 12201,
+        TransportType = Serilog.Sinks.Graylog.Core.Transport.TransportType.Udp,
+        Facility = "DomainDrivenDesign"
+    })
+    .CreateLogger();
+
+Log.Information("Uygulama başlatıldı - {Timestamp}", DateTime.UtcNow);
+
+builder.Host.UseSerilog();
 
 #region Config
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
