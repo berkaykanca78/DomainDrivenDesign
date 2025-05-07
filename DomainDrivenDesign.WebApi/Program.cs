@@ -3,12 +3,44 @@ using DomainDrivenDesign.Infrastructure.Settings;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
+using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.Http;
+using DomainDrivenDesign.WebApi.Extensions;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #region Config
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<LoginSettings>(builder.Configuration.GetSection("LoginSettings"));
+
+// Memory Cache servisini ekle
+builder.Services.AddMemoryCache();
+
+// Rate limiting yapılandırması
+builder.Services.Configure<IpRateLimitOptions>(options =>
+{
+    options.EnableEndpointRateLimiting = true;
+    options.StackBlockedRequests = false;
+    options.RealIpHeader = "X-Forwarded-For";
+    options.ClientIdHeader = "X-ClientId";
+    options.HttpStatusCode = 429;
+    options.GeneralRules = new List<RateLimitRule>
+    {
+        new RateLimitRule
+        {
+            Endpoint = "*",
+            Period = "1m",
+            Limit = 1
+        }
+    };
+});
+
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+builder.Services.AddInMemoryRateLimiting();
 #endregion
 
 #region Controller, CORS, Swagger
@@ -65,6 +97,9 @@ app.Use(async (context, next) =>
     }
     await next();
 });
+
+app.UseGlobalExceptionMiddleware(); // Önce global exception handling
+app.UseIpRateLimiting(); // Sonra rate limiting
 
 app.UseHttpsRedirection();
 app.UseCors(x => x

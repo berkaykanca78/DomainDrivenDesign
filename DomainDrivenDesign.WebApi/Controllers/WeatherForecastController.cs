@@ -1,12 +1,15 @@
 ﻿using DomainDrivenDesign.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using AspNetCoreRateLimit;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace DomainDrivenDesign.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    //[Authorize]
+    [EnableRateLimiting("fixed")]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -22,6 +25,7 @@ namespace DomainDrivenDesign.WebApi.Controllers
         }
 
         [HttpGet(nameof(GetWeatherForecast))]
+        [EnableRateLimiting("fixed")]
         public IEnumerable<WeatherForecast> GetWeatherForecast()
         {
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
