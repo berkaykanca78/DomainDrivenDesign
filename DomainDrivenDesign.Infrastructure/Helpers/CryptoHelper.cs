@@ -28,7 +28,7 @@ public static class CryptoHelper
             {
                 using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
                 {
-                    using (StreamWriter streamWriter = new StreamWriter(cryptoStream))
+                    using (StreamWriter streamWriter = new StreamWriter(cryptoStream, Encoding.UTF8))
                     {
                         streamWriter.Write(plainText);
                     }
@@ -64,7 +64,7 @@ public static class CryptoHelper
                 {
                     using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
                     {
-                        using (StreamReader streamReader = new StreamReader(cryptoStream))
+                        using (StreamReader streamReader = new StreamReader(cryptoStream, Encoding.UTF8))
                         {
                             return streamReader.ReadToEnd();
                         }
@@ -74,7 +74,7 @@ public static class CryptoHelper
         }
         catch (CryptographicException ex)
         {
-            throw new CryptographicException($"�ifre ��zme i�leminde hata: {ex.Message} - �ifrelenmi� metin: {cipherText}", ex);
+            throw new CryptographicException($"Şifre çözme işleminde hata: {ex.Message} - Şifrelenmiş metin: {cipherText}", ex);
         }
         catch (Exception ex)
         {
