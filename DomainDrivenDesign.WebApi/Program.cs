@@ -1,13 +1,15 @@
+using Amazon.S3;
 using AspNetCoreRateLimit;
 using DomainDrivenDesign.Infrastructure.Helpers;
+using DomainDrivenDesign.Infrastructure.Services;
 using DomainDrivenDesign.Infrastructure.Settings;
 using DomainDrivenDesign.WebApi.Middlewares;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
-using System.Text;
 using Serilog;
 using Serilog.Sinks.Graylog;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,8 +30,12 @@ Log.Information("Uygulama başlatıldı - {Timestamp}", DateTime.UtcNow);
 builder.Host.UseSerilog();
 
 #region Config
+builder.Services.AddSingleton<IAmazonS3, AmazonS3Client>();
+builder.Services.AddScoped<FileManager>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<LoginSettings>(builder.Configuration.GetSection("LoginSettings"));
+builder.Services.Configure<S3Settings>(builder.Configuration.GetSection("S3Settings"));
+builder.Services.AddSingleton<S3Settings>(resolver => builder.Configuration.GetSection("S3Settings").Get<S3Settings>());
 
 builder.Services.AddMemoryCache();
 
@@ -74,9 +80,9 @@ builder.Services.AddSingleton<JwtSettings>(resolver =>
     
     var jwtSettings = new JwtSettings
     {
-        Issuer = EncryptionHelper.Decrypt(encryptedJwtSettings.Issuer),
-        Audience = EncryptionHelper.Decrypt(encryptedJwtSettings.Audience),
-        SecretKey = EncryptionHelper.Decrypt(encryptedJwtSettings.SecretKey)
+        Issuer = CryptoHelper.Decrypt(encryptedJwtSettings.Issuer),
+        Audience = CryptoHelper.Decrypt(encryptedJwtSettings.Audience),
+        SecretKey = CryptoHelper.Decrypt(encryptedJwtSettings.SecretKey)
     };
     
     return jwtSettings;

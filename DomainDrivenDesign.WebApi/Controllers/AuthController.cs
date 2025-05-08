@@ -23,8 +23,8 @@ namespace DomainDrivenDesign.WebApi.Controllers
 
             try
             {
-                _loginSettings.Username = EncryptionHelper.Decrypt(_loginSettings.Username);
-                _loginSettings.Password = EncryptionHelper.Decrypt(_loginSettings.Password);
+                _loginSettings.Username = CryptoHelper.Decrypt(_loginSettings.Username);
+                _loginSettings.Password = CryptoHelper.Decrypt(_loginSettings.Password);
             }
             catch (Exception)
             {

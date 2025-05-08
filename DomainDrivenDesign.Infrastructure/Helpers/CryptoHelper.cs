@@ -3,18 +3,9 @@ using System.Text;
 
 namespace DomainDrivenDesign.Infrastructure.Helpers;
 
-public static class EncryptionHelper
+public static class CryptoHelper
 {
     private static readonly string _key = "b14ca5898a4e4133bbce2ea2315a1916";
-
-    public static string GenerateKey()
-    {
-        using (var aes = Aes.Create())
-        {
-            aes.GenerateKey();
-            return Convert.ToBase64String(aes.Key);
-        }
-    }
 
     public static string Encrypt(string plainText)
     {
@@ -83,8 +74,7 @@ public static class EncryptionHelper
         }
         catch (CryptographicException ex)
         {
-            // Daha açýklayýcý hata mesajý
-            throw new CryptographicException($"Þifre çözme iþleminde hata: {ex.Message} - Þifrelenmiþ metin: {cipherText}", ex);
+            throw new CryptographicException($"ï¿½ifre ï¿½ï¿½zme iï¿½leminde hata: {ex.Message} - ï¿½ifrelenmiï¿½ metin: {cipherText}", ex);
         }
         catch (Exception ex)
         {

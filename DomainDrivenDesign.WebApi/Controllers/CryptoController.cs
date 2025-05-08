@@ -15,7 +15,7 @@ public class CryptoController : ControllerBase
 
         try
         {
-            var encryptedText = EncryptionHelper.Encrypt(text);
+            var encryptedText = CryptoHelper.Encrypt(text);
             return Ok(encryptedText);
         }
         catch (Exception ex)
@@ -32,26 +32,12 @@ public class CryptoController : ControllerBase
 
         try
         {
-            var decryptedText = EncryptionHelper.Decrypt(text);
+            var decryptedText = CryptoHelper.Decrypt(text);
             return Ok(decryptedText);
         }
         catch (Exception ex)
         {
             return StatusCode(500, $"Şifre çözme işlemi sırasında bir hata oluştu: {ex.Message}");
-        }
-    }
-
-    [HttpGet("generate-key")]
-    public IActionResult GenerateKey()
-    {
-        try
-        {
-            var key = EncryptionHelper.GenerateKey();
-            return Ok(key);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Anahtar üretme işlemi sırasında bir hata oluştu: {ex.Message}");
         }
     }
 } 
