@@ -5,16 +5,10 @@ using Microsoft.AspNetCore.Http;
 
 namespace DomainDrivenDesign.Infrastructure.Services;
 
-public class FileManager
+public class FileManager(IAmazonS3 s3, S3Settings s3Settings)
 {
-    private readonly IAmazonS3 _s3;
-    private readonly S3Settings _s3Settings;
-
-    public FileManager(IAmazonS3 s3, S3Settings s3Settings)
-    {
-        _s3 = s3;
-        _s3Settings = s3Settings;
-    }
+    private readonly IAmazonS3 _s3 = s3;
+    private readonly S3Settings _s3Settings = s3Settings;
 
     public async Task<PutObjectResponse> UploadImageAsync(Guid id, IFormFile file)
     {
